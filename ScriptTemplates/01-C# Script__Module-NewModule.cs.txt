@@ -1,0 +1,18 @@
+using Assets.ManagerHotFix.JFramework.Base;
+using System;
+
+namespace Assets
+{
+	public class #SCRIPTNAME# : BaseModule
+    {
+		public #SCRIPTNAME#()
+        {
+            PreFabs = "";
+        }
+
+        public override Type GetView()
+        {
+            return null;
+        }
+	}
+}

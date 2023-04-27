@@ -1,0 +1,25 @@
+using Assets.ManagerHotFix.JFramework.Base;
+using System;
+
+namespace Assets
+{
+    public class #SCRIPTNAME# : BaseView
+    {
+		public override void AddEventListener()
+        {
+        }
+
+        public override void ShowView(object obj)
+        {
+        }
+
+        public override void OnBtnClickEvent()
+        {
+        }
+
+        public override void RemoveEventListener()
+        {
+        }
+
+	}
+}

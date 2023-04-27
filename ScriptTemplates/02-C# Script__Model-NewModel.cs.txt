@@ -1,0 +1,16 @@
+using Assets.ManagerHotFix.JFramework.Base;
+using System;
+
+namespace Assets
+{
+    public class #SCRIPTNAME# : BaseModel
+    {
+		 public override void Init()
+        {
+        }
+
+        public override void ResetModel()
+        {
+        }
+	}
+}
