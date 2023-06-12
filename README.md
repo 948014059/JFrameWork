@@ -2,6 +2,7 @@
 
 ## 接入HybridCLR
 * https://gitee.com/focus-creative-games/hybridclr_unity.git
+* https://gitee.com/focus-creative-games/hybridclr_unity.git#v2.4.2
 * Window > Package Manager > + > add package from git url 
 * HybridCLR > installer > 安装
 

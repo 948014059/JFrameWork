@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEditor;
@@ -12,13 +13,13 @@ namespace Assets.Editor
     class ExcelReaderTools : EditorWindow
     {
         static ExcelReaderTools window;
-        private string pythonScriptPath = "/ConfigData/Excel2CsvAndCsharp.py";
-        private string exchelPath = "/ConfigData/";
-        private string txtSavePath = "/ProjectResources/ConfigDataText/";
-        private string csSavePath = "/Hotfix/ConfigData/";
+        private string pythonScriptPath = "/ConfigExcels/Excel2CsvAndCsharp.py";
+        private string exchelPath = "/ConfigExcels/";
+        private string txtSavePath = "/ProjectResources/Configs/";
+        private string csSavePath = "/Scripts/HotFixScript/Config/";
         private string excelExtension = "xls";
 
-        [MenuItem("Tools/ExcelTool")]
+        [MenuItem("其他工具/配置表生成工具")]
         static void ShowWindow()
         {
             window = (ExcelReaderTools)EditorWindow.GetWindow(typeof(ExcelReaderTools), false);
@@ -74,15 +75,56 @@ namespace Assets.Editor
         private void StartExchange()
         {
             string cmdStr =
-                "python " + Application.dataPath+ pythonScriptPath +
+                "python " + Application.dataPath + pythonScriptPath +
                 " --excelpath=" + Application.dataPath + exchelPath +
                 " --cspath=" + Application.dataPath + csSavePath +
                 " --txtpath=" + Application.dataPath + txtSavePath +
                 " --extension=" + excelExtension;
 
-            //UnityEngine.Debug.Log(cmdStr);
+            //Process po =  Process.Start("CMD.exe", "/k " + cmdStr);
 
-            Process.Start("CMD.exe", "/k " + cmdStr);
+            Process p = new Process();
+
+            p.StartInfo.FileName = "cmd.exe";
+            //是否使用操作系统shell启动
+            p.StartInfo.UseShellExecute = false;
+            // 接受来自调用程序的输入信息
+            p.StartInfo.RedirectStandardInput = true;
+            //输出信息
+            p.StartInfo.RedirectStandardOutput = true;
+            // 输出错误
+            p.StartInfo.RedirectStandardError = true;
+            //不显示程序窗口
+            p.StartInfo.CreateNoWindow = false;
+            p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Normal;
+            //启动程序
+            p.Start();
+            p.StandardInput.WriteLine(cmdStr + "&exit");
+
+            p.StandardInput.AutoFlush = true;
+
+            //获取输出信息
+            string strOuput = p.StandardOutput.ReadToEnd();
+            string strErrOuput = p.StandardError.ReadToEnd();
+            //等待程序执行完退出进程
+            p.WaitForExit();
+            p.Close();
+
+            UnityEngine.Debug.Log(strOuput);
+            AssetDatabase.Refresh();
+            //if (EditorApplication.isPlaying)
+            //{
+            //    Assembly ass = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "ManagerHotFix");
+            //    Type ModuleManagerType = ass.GetType("Assets.ManagerHotFix.JFramework.Manager.ConfigDataManager"); // 获得ModuleManager类
+            //    MethodInfo moduleManagerIns = ModuleManagerType.BaseType.GetMethod("GetInstance"); //获得基类单例
+            //    object instance = moduleManagerIns.Invoke(null, null); // 实例化单例
+
+            //    MethodInfo moduleManagerOpenModule = ModuleManagerType.GetMethod("UpdateAllConfig"); // 进入游戏逻辑
+
+            //    moduleManagerOpenModule.Invoke(instance, null); // 使用方法。
+
+            //}
+
 
         }
     }

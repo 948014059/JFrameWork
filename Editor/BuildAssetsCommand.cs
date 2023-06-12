@@ -1,4 +1,4 @@
-﻿using Assets.AotScript.Script;
+﻿using Assets.Scripts.AotScript;
 using HybridCLR.Editor;
 using HybridCLR.Editor.Commands;
 using System;

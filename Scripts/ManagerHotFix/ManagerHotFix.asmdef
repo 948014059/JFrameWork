@@ -1,0 +1,16 @@
+{
+    "name": "ManagerHotFix",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e0f006247db63d648ab863bee168abe1"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
