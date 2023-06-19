@@ -114,6 +114,7 @@ namespace Assets.ManagerHotFix.JFramework.Utils
             }
         }
 
+
         public static void LogWarning(string info)
         {
             if (UseLog)

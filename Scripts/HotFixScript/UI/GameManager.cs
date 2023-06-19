@@ -14,7 +14,6 @@ namespace Assets.HotFix.Game
         {
             ModuleManager.GetInstance().OpenModule<StartModule>(()=>{
                 ModuleManager.GetInstance().CloseModule<UpdateModule>();
-
             });
              
         }

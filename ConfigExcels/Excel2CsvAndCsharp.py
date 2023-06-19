@@ -7,6 +7,14 @@ import glob
 def Excel2Csv(excel,csvSvaePath):
     excel.to_csv(csvSvaePath,index=None)
 
+def Excel2Txt(dataLines,txtSavePath):
+    with open(txtSavePath,"w",encoding="utf-8") as f:
+        for  i in range(len(dataLines)):
+            if  i == len(dataLines) - 1:
+                f.write(dataLines[i])
+            else:
+                f.write(dataLines[i]+"\n")
+
 def Excel2Csharp(strList,csharpSavePath,csharpClssName):
     with open(csharpSavePath,"w" ,encoding="utf-8") as f:
         f.write("using UnityEngine;\nusing System.Collections;\nusing System;\nusing System.Collections.Generic;\n")
@@ -36,7 +44,7 @@ def Excel2Csharp(strList,csharpSavePath,csharpClssName):
         f.write("\n")
         f.write("       public override string GetTablePath()\n")
         f.write("       {\n")
-        f.write("           return \"%s\";\n"%("ConfigDataText/"+csharpClssName))
+        f.write("           return \"%s\";\n"%(csharpClssName))
         f.write("       }\n")
         f.write("   }\n")
         f.write("}\n")
@@ -68,23 +76,36 @@ if __name__ == "__main__":
             rowLineLength = len(ExcelDAta.iloc[0])
             variableStrList =[]
             for i in range(1,rowLineLength):
-                Datatype =  ExcelDAta.iloc[0][i]
+                Datatype =  ExcelDAta.iloc[0][i] if ExcelDAta.iloc[0][i] != "List" else "List<string>"
                 summary  =  ExcelDAta.iloc[1][i]
                 DataName =  ExcelDAta.iloc[2][i]
                 variableStrList.append("\n        /// <summary>\n        /// %s\n        /// </summary>\n"%summary+
-                     "       public %s %s;"%(Datatype,DataName)) 
+                     "       public %s %s;"%(Datatype ,DataName)) 
+            
             # 创建一个新表，填充可导数据
+            print("正在转换：",_csharpClssName,"表头",list(ExcelDAta.iloc[2][1:]))
             newExcelData = []
+
+            typetitle = ""
+            for type in ExcelDAta.iloc[0][1:]:
+                typetitle+=type+" "
+            newExcelData.append(typetitle[:-1])
+
+
+            titleline = ""
+            for title in ExcelDAta.iloc[2][1:]:
+                titleline+=title+" "
+            newExcelData.append(titleline[:-1])
+
             for item in ExcelDAta.iloc:
                 if item[0] == 1:
-                    dataline = []
+                    dataline = ""
                     for i in range(1,rowLineLength):
-                        # print(item[i]) 
-                        dataline.append(item[i])
-                    newExcelData.append(dataline)
-            print("正在转换：",_csharpClssName,"表头",list(ExcelDAta.iloc[2][1:]))
-            newExcel = pd.DataFrame(newExcelData,columns=list(ExcelDAta.iloc[2][1:]))
-            Excel2Csv(newExcel,_txtSvaePath)
+                        itemStr = str(item[i]).replace("\n","\\n").replace("\t","\\t").replace(" ","\\o")
+                        dataline+=itemStr+" "
+                    newExcelData.append(dataline[:-1])
+
+            Excel2Txt(newExcelData,_txtSvaePath)
             Excel2Csharp(variableStrList,_csharpSavePath,_csharpClssName)
 
 print("转换已完成")

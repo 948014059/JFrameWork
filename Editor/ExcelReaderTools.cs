@@ -81,36 +81,36 @@ namespace Assets.Editor
                 " --txtpath=" + Application.dataPath + txtSavePath +
                 " --extension=" + excelExtension;
 
-            //Process po =  Process.Start("CMD.exe", "/k " + cmdStr);
+            Process po =  Process.Start("CMD.exe", "/k " + cmdStr);
 
-            Process p = new Process();
+            //Process p = new Process();
 
-            p.StartInfo.FileName = "cmd.exe";
-            //是否使用操作系统shell启动
-            p.StartInfo.UseShellExecute = false;
-            // 接受来自调用程序的输入信息
-            p.StartInfo.RedirectStandardInput = true;
-            //输出信息
-            p.StartInfo.RedirectStandardOutput = true;
-            // 输出错误
-            p.StartInfo.RedirectStandardError = true;
-            //不显示程序窗口
-            p.StartInfo.CreateNoWindow = false;
-            p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Normal;
-            //启动程序
-            p.Start();
-            p.StandardInput.WriteLine(cmdStr + "&exit");
+            //p.StartInfo.FileName = "cmd.exe";
+            ////是否使用操作系统shell启动
+            //p.StartInfo.UseShellExecute = false;
+            //// 接受来自调用程序的输入信息
+            //p.StartInfo.RedirectStandardInput = true;
+            ////输出信息
+            //p.StartInfo.RedirectStandardOutput = true;
+            //// 输出错误
+            //p.StartInfo.RedirectStandardError = true;
+            ////不显示程序窗口
+            //p.StartInfo.CreateNoWindow = false;
+            //p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Normal;
+            ////启动程序
+            //p.Start();
+            //p.StandardInput.WriteLine(cmdStr + "&exit");
 
-            p.StandardInput.AutoFlush = true;
+            //p.StandardInput.AutoFlush = true;
 
-            //获取输出信息
-            string strOuput = p.StandardOutput.ReadToEnd();
-            string strErrOuput = p.StandardError.ReadToEnd();
-            //等待程序执行完退出进程
-            p.WaitForExit();
-            p.Close();
+            ////获取输出信息
+            //string strOuput = p.StandardOutput.ReadToEnd();
+            //string strErrOuput = p.StandardError.ReadToEnd();
+            ////等待程序执行完退出进程
+            //p.WaitForExit();
+            //p.Close();
 
-            UnityEngine.Debug.Log(strOuput);
+            //UnityEngine.Debug.Log(strOuput);
             AssetDatabase.Refresh();
             //if (EditorApplication.isPlaying)
             //{

@@ -24,6 +24,16 @@ namespace Assets.HotFix.ConfigData
         /// </summary>
        public string level;
 
+        /// <summary>
+        /// 位置
+        /// </summary>
+       public Vector3 pos;
+
+        /// <summary>
+        /// 数组
+        /// </summary>
+       public List<string> list;
+
        public List<TipsConfig> data = new List<TipsConfig>();
 
        public TipsConfig GetDataByID(int id)
