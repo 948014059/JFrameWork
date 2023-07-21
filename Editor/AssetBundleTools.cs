@@ -88,9 +88,14 @@ namespace Assets.Editor
 
 
         [MenuItem("打包工具/Build/BuildWithOutAB")]
-        void BuildHotFixAndVersion()
+        static void BuildHotFixAndVersion()
         {
-            Reset();
+            //Reset();
+            ProjectResourcesPath = Application.dataPath + "/ProjectResources/";
+            ABSavePath = Application.dataPath.Replace("Assets", "ProjectResources/");
+            VersionName = PlatFrom + "/VersionConfig.txt";
+            ApkDir = Application.dataPath.Replace("Assets", "BuildApk/");
+            ApkPath = ApkDir + Application.productName + ".apk";
             IsGenHotFix = true;
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
             CreateHotfixDllAndCopy(target);
