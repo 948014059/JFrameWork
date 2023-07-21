@@ -281,33 +281,48 @@ namespace Assets.ManagerHotFix.JFramework.Update
         {
             Debug.Log(Application.version + "/" + updateModel.serverVersionData.version);
 
+            Action GotoDownLoadApk = () =>{
+                updateModel.ResetModel();
+                updateModel.needUpdateFileLength = updateModel.serverVersionData.apkLength;
+
+                updateModel.needHotUpdateList.Add(new UpdateModel.FileData()
+                {
+                    filename = updateModel.serverVersionData.apkPath,
+                    length = updateModel.serverVersionData.apkLength,
+                    md5 = updateModel.serverVersionData.apkMd5
+                });
+                updateModel.IsDownApk = true;
+                UpdatePrompt.gameObject.SetActive(true);
+                UpdatePrompt.transform.Find("Text_Title").GetComponent<Text>().text = "检测到新版本";
+                UpdatePrompt.transform.Find("Text_Info").GetComponent<Text>().text = string.Format("version:{0} \n检测到版本更新,大小：{1}MB \n是否更新",
+                    updateModel.serverVersionData.version, Utils.Utils.ByteLength2MB(updateModel.serverVersionData.apkLength).ToString("0.0"));
+                AddBtnClickEvent(UpdatePrompt.Find("Button_Yes"), () => { StartUpdate(); });
+                AddBtnClickEvent(UpdatePrompt.Find("Button_No"), () => { BaseUtils.QuitApp(); });
+            };
+
             // 当前apk大版本号小于服务器大版本号
             if (int.Parse(Application.version[0].ToString()) < int.Parse( updateModel.serverVersionData.version[0].ToString()))
             {
+                string apkPath = Config.ABPath + Config.PlatFrom + "/" + updateModel.serverVersionData.apkPath;
                 // 本地是否有apk包
-                if (File.Exists(Config.ABPath+Config.ApkName))
+                if (File.Exists(apkPath))
                 {
-                    //拉起安装程序
-                    bool success = Utils.Utils.InstallNewApk(Config.ABPath + Config.ApkName);
-                    Debug.Log("success:" + success);
+                    Debug.Log(
+                        "本地md5："+Utils.Utils.GetMD5HashFromFile(apkPath)+ "最新md5："+updateModel.serverVersionData.apkMd5);
+                    if (Utils.Utils.GetMD5HashFromFile(apkPath) == updateModel.serverVersionData.apkMd5)
+                    {
+                        //拉起安装程序
+                        bool success = Utils.Utils.InstallNewApk(Config.ABPath + Config.ApkName);
+                        Debug.Log("success:" + success);
+                    }
+                    else
+                    {
+                        GotoDownLoadApk();
+                    }
                 }
                 else
                 {
-                    updateModel.ResetModel();
-                    updateModel.needUpdateFileLength = updateModel.serverVersionData.apkLength;
-
-                    updateModel.needHotUpdateList.Add(new UpdateModel.FileData() { 
-                        filename = updateModel.serverVersionData.apkPath,
-                        length   = updateModel.serverVersionData.apkLength,
-                        md5      = updateModel.serverVersionData.apkMd5
-                    });
-                    updateModel.IsDownApk = true;
-                    UpdatePrompt.gameObject.SetActive(true);
-                    UpdatePrompt.transform.Find("Text_Title").GetComponent<Text>().text = "检测到新版本";
-                    UpdatePrompt.transform.Find("Text_Info").GetComponent<Text>().text = string.Format("version:{0} \n检测到版本更新,大小：{1}MB \n是否更新",
-                        updateModel.serverVersionData.version, Utils.Utils.ByteLength2MB(updateModel.serverVersionData.apkLength).ToString("0.0"));
-                    AddBtnClickEvent(UpdatePrompt.Find("Button_Yes"), () => { StartUpdate(); });
-                    AddBtnClickEvent(UpdatePrompt.Find("Button_No"), () => { BaseUtils.QuitApp(); });
+                    GotoDownLoadApk();
                 }
 
             }
