@@ -200,6 +200,14 @@ namespace Assets.ManagerHotFix.JFramework.Utils
         }
         #endregion
 
+
+        #region 原生Android
+        public static bool InstallNewApk(string apkPath)
+        {
+            AndroidJavaClass javaClass = new AndroidJavaClass("com.example.installer.apkinstall");
+            return javaClass.CallStatic<bool>("InstallApk", apkPath);
+        }
+        #endregion
     }
 
 

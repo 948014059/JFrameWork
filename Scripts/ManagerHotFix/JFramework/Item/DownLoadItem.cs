@@ -40,8 +40,9 @@ namespace Assets.ManagerHotFix.JFramework.Item
             isStartDownLoad = false;
             fileNameWithoutExt = _url.Replace(Config.UpdateUrl + Config.PlatFrom, "").
                 Replace(Config.streamAssetsDataPath+Config.PlatFrom,"");
+            //fileNameWithoutExt = fileNameWithoutExt.Split('.')[0];
             fileExt = Path.GetExtension(srcUrl);
-            if (fileExt == ".bytes")
+            if (fileExt == ".bytes" || fileExt == ".apk")
             {
                 saveFilePath = string.Format("{0}/{1}", savePath, fileNameWithoutExt);
             }
@@ -56,7 +57,9 @@ namespace Assets.ManagerHotFix.JFramework.Item
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="finishCallBack"></param>
-        public virtual void StartDownLoad(Action<long> callback = null, Action<long, string> finishCallBack = null)
+        public virtual void StartDownLoad(Action<long> callback = null, 
+            Action<long, string> finishCallBack = null, Action<long> tempcallback = null,
+            Action<string> errorCallBack = null)
         {
             if (string.IsNullOrEmpty(srcUrl) || string.IsNullOrEmpty(saveFilePath))
             {

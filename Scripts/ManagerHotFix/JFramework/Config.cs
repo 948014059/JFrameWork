@@ -49,6 +49,8 @@ namespace Assets.ManagerHotFix.JFramework
         public static string VersionName = PlatFrom + "/VersionConfig.txt";
         public static string VersionTempName = PlatFrom + "/VersionTempConfig.txt";
         public static string CopyResourceTempName = PlatFrom + "/CopyResourceTempConfig.txt";
+        public static string ApkName = PlatFrom + "/" + Application.productName + ".apk";
+
 
 
         public static int HttpTimeOut = 5;

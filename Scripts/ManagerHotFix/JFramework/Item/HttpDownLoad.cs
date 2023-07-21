@@ -24,14 +24,25 @@ namespace Assets.ManagerHotFix.JFramework.Item
             tempSaveFilePath = string.Format("{0}/{1}{2}", savePath, fileNameWithoutExt, tempFileExt);
         }
 
-        public override void StartDownLoad(Action<long> callback = null, Action<long, string> finishCallBack = null)
+        public override void StartDownLoad(Action<long> callback = null, 
+            Action<long, string> finishCallBack = null, 
+            Action<long> tempcallback = null, 
+            Action<string> errorCallBack = null)
         {
             base.StartDownLoad(callback, finishCallBack);
-            DownLoadManager.GetInstance().StartConHasMaxNum(DownLoad(callback, finishCallBack));
+            DownLoadManager.GetInstance().StartConHasMaxNum(DownLoad(callback, finishCallBack,tempcallback,errorCallBack));
         }
 
-        IEnumerator DownLoad(Action<long> callback = null, 
-            Action<long, string> finishCallBack = null,Action<string> errorCallBack = null)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="downCallback">下载长度的实时callback</param>
+        /// <param name="finishCallBack">下载完成的callBack</param>
+        /// <param name="tempcallback">有缓存时的callback</param>
+        /// <param name="errorCallBack">下载错误的callBack</param>
+        /// <returns></returns>
+        IEnumerator DownLoad(Action<long> downCallback = null, 
+            Action<long, string> finishCallBack = null, Action<long> tempcallback = null, Action<string> errorCallBack = null)
         {
             Debug.Log("开始下载：" + srcUrl);
             UnityWebRequest request = UnityWebRequest.Get(srcUrl);
@@ -39,6 +50,7 @@ namespace Assets.ManagerHotFix.JFramework.Item
             FileStream fileStream;
             if (File.Exists(tempSaveFilePath))
             {
+                Debug.Log("-->"+tempSaveFilePath);
                 fileStream = File.OpenWrite(tempSaveFilePath);
                 currentLength = fileStream.Length;
                 fileStream.Seek(currentLength, SeekOrigin.Current); // 移动游标到最后                                                    /
@@ -60,6 +72,7 @@ namespace Assets.ManagerHotFix.JFramework.Item
                 }
                 else
                 {
+                    tempcallback?.Invoke(currentLength);
                     //Debug.Log(request.downloadHandler.data.Length);
                     Stream stream = new MemoryStream(request.downloadHandler.data);
                     fileLength = request.downloadHandler.data.Length + currentLength;
@@ -75,7 +88,7 @@ namespace Assets.ManagerHotFix.JFramework.Item
                             lengthOnce = stream.Read(buffer, 0, buffer.Length);
                             currentLength += lengthOnce;
                             fileStream.Write(buffer, 0, lengthOnce);
-                            callback?.Invoke(lengthOnce);
+                            downCallback?.Invoke(lengthOnce);
                         }
                         else
                         {

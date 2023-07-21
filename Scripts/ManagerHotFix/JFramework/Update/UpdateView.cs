@@ -50,7 +50,7 @@ namespace Assets.ManagerHotFix.JFramework.Update
                     updateModel.downLoadTime += Time.deltaTime;
                     SetUpdateText("正在更新中...[" + updateModel.currDownNum + "/" + updateModel.needHotUpdateList.Count + "]   " +
                         (Utils.Utils.ByteLength2KB(updateModel.downLen) / updateModel.downLoadTime).ToString("0.0") + "KB/S");
-                    updataSlider.value = (float)updateModel.currDownNum / updateModel.needHotUpdateList.Count;
+                    updataSlider.value = (float)(updateModel.downLen + updateModel.downTempLen) / updateModel.needUpdateFileLength;
                     if (updateModel.currDownNum >= updateModel.needHotUpdateList.Count)
                     {
                         updataSlider.value = 1;
@@ -58,7 +58,19 @@ namespace Assets.ManagerHotFix.JFramework.Update
                         Utils.Utils.DelFile(Config.ABPath + Config.VersionTempName);
                         Utils.Utils.SaveStringToPath(updateModel.serverData, Config.ABPath + Config.VersionName);
                         SetUpdateText("更新完成...");
-                        LoadHotFix();
+                        if (updateModel.IsDownApk)
+                        {
+                            if (File.Exists(Config.ABPath + Config.ApkName))
+                            {
+                                //拉起安装程序
+                                bool success = Utils.Utils.InstallNewApk(Config.ABPath + Config.ApkName);
+                                Debug.Log("success:" + success);
+                            }
+                        }
+                        else
+                        {
+                            LoadHotFix();
+                        }
                     }
                 }
             }
@@ -159,17 +171,17 @@ namespace Assets.ManagerHotFix.JFramework.Update
                 updateModel.serverData = _serverData;
                 SetUpdateText("正在对比本地文件...");
                 updateModel.needHotUpdateList.Clear();
-                UpdateModel.VersionData serverVersionData = updateModel.GetVersionJsonData(updateModel.serverData);
+                updateModel.serverVersionData = updateModel.GetVersionJsonData(updateModel.serverData);
 
                 string localVersion = Utils.Utils.GetLocalFileData(Config.ABPath + Config.VersionName);
                 if (string.IsNullOrEmpty(localVersion)) //本地无版本配置文件
                 {
-                    updateModel.needHotUpdateList = serverVersionData.filedatas;
+                    updateModel.needHotUpdateList = updateModel.serverVersionData.filedatas;
                 }
                 else // 对比配置文件
                 {
-                    UpdateModel.VersionData localVersionData = updateModel.GetVersionJsonData(localVersion);
-                    updateModel.ContrastVersion(serverVersionData.filedatas, localVersionData.filedatas);
+                    updateModel.localVersionData = updateModel.GetVersionJsonData(localVersion);
+                    updateModel.ContrastVersion(updateModel.serverVersionData.filedatas, updateModel.localVersionData.filedatas);
                 }
 
                 updateModel.CheckDownLoadTempFile();
@@ -178,15 +190,15 @@ namespace Assets.ManagerHotFix.JFramework.Update
                 {
                     foreach (var item in updateModel.needHotUpdateList)
                     {
-                        updateModel.needUpdateFileLength += long.Parse(item.length);
+                        updateModel.needUpdateFileLength += item.length;
                     }
 
                     UpdatePrompt.gameObject.SetActive(true);
                     UpdatePrompt.transform.Find("Text_Title").GetComponent<Text>().text = "检测到新版本";
                     UpdatePrompt.transform.Find("Text_Info").GetComponent<Text>().text = string.Format("version:{0} \n检测到版本更新,大小：{1}MB \n是否跟新",
-                        serverVersionData.version, Utils.Utils.ByteLength2MB(updateModel.needUpdateFileLength).ToString("0.0"));
-                    AddBtnClickEvent(UpdatePrompt.Find("Button_Yes"),()=> { StartUpdate(); });
-                    AddBtnClickEvent(UpdatePrompt.Find("Button_No"),()=> { BaseUtils.QuitApp(); });
+                        updateModel.serverVersionData.version, Utils.Utils.ByteLength2MB(updateModel.needUpdateFileLength).ToString("0.0"));
+                    AddBtnClickEvent(UpdatePrompt.Find("Button_Yes"), () => { StartUpdate(); });
+                    AddBtnClickEvent(UpdatePrompt.Find("Button_No"), () => { BaseUtils.QuitApp(); });
 
                 }
                 else
@@ -226,6 +238,10 @@ namespace Assets.ManagerHotFix.JFramework.Update
         /// </summary>
         private void StartUpdate()
         {
+            if (updateModel.IsStartDown)
+            {
+                return;
+            }
             UpdatePrompt.gameObject.SetActive(false);
             updateModel.IsStartDown = true;
             Debug.Log("需要热更数量：" + updateModel.needHotUpdateList.Count);
@@ -243,28 +259,86 @@ namespace Assets.ManagerHotFix.JFramework.Update
                 {
                     updateModel.currDownNum += 1;
                     updateModel.currDownLength += fileLength;
-                    updateModel.SaveDownLoadFileTemp(fileName.Substring(1, fileName.Length - 1));
+                    if (!updateModel.IsDownApk)
+                    {
+                        updateModel.SaveDownLoadFileTemp(fileName.Substring(1, fileName.Length - 1));
+                    }
+                },(tempLen)=> {
+                    updateModel.downTempLen += tempLen;
                 });
             }
         }
+
+
+
+
+
+
+        /// <summary>
+        /// 检测大版本更新
+        /// </summary>
+        public void CheckBigUpdate(Action callBack)
+        {
+            Debug.Log(Application.version + "/" + updateModel.serverVersionData.version);
+
+            // 当前apk大版本号小于服务器大版本号
+            if (int.Parse(Application.version[0].ToString()) < int.Parse( updateModel.serverVersionData.version[0].ToString()))
+            {
+                // 本地是否有apk包
+                if (File.Exists(Config.ABPath+Config.ApkName))
+                {
+                    //拉起安装程序
+                    bool success = Utils.Utils.InstallNewApk(Config.ABPath + Config.ApkName);
+                    Debug.Log("success:" + success);
+                }
+                else
+                {
+                    updateModel.ResetModel();
+                    updateModel.needUpdateFileLength = updateModel.serverVersionData.apkLength;
+
+                    updateModel.needHotUpdateList.Add(new UpdateModel.FileData() { 
+                        filename = updateModel.serverVersionData.apkPath,
+                        length   = updateModel.serverVersionData.apkLength,
+                        md5      = updateModel.serverVersionData.apkMd5
+                    });
+                    updateModel.IsDownApk = true;
+                    UpdatePrompt.gameObject.SetActive(true);
+                    UpdatePrompt.transform.Find("Text_Title").GetComponent<Text>().text = "检测到新版本";
+                    UpdatePrompt.transform.Find("Text_Info").GetComponent<Text>().text = string.Format("version:{0} \n检测到版本更新,大小：{1}MB \n是否更新",
+                        updateModel.serverVersionData.version, Utils.Utils.ByteLength2MB(updateModel.serverVersionData.apkLength).ToString("0.0"));
+                    AddBtnClickEvent(UpdatePrompt.Find("Button_Yes"), () => { StartUpdate(); });
+                    AddBtnClickEvent(UpdatePrompt.Find("Button_No"), () => { BaseUtils.QuitApp(); });
+                }
+
+            }
+            else
+            {
+                callBack?.Invoke();
+            }
+        }
+
 
         /// <summary>
         /// 资源更新完成，可以开始加载游戏逻辑了
         /// </summary>
         private void LoadHotFix()
         {
-            ABManager.GetInstance().ReLoadAssetBundle();  // 重新加载AB包
-            /// 加载热更程序
-            StartCoroutine(GameLoader.Instance.DownloadHotFixAssets("Assembly-CSharp.dll", () =>
-            {
-                /// 补充元数据
-               // GameLoader.Instance.LoadMetadataForAOTAssemblies();
+
+            CheckBigUpdate(()=> {
+                ABManager.GetInstance().ReLoadAssetBundle();  // 重新加载AB包
+                /// 加载热更程序
+                StartCoroutine(GameLoader.Instance.DownloadHotFixAssets("Assembly-CSharp.dll", () =>
+                {
+                    /// 补充元数据
+                    GameLoader.Instance.LoadMetadataForAOTAssemblies();
 #if !UNITY_EDITOR
         System.Reflection.Assembly.Load(GameLoader.Instance.GetAssetData("Assembly-CSharp.dll"));
 #endif
-                StartG();
+                    StartG();
 
-            }, Config.ABPath, Config.PlatFrom));
+                }, Config.ABPath, Config.PlatFrom));
+            });
+
         }
 
         /// <summary>

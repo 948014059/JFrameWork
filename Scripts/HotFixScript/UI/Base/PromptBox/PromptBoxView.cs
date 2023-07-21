@@ -39,15 +39,25 @@ namespace Assets.HotFix.UI.PromptBox
             }
         }
 
+        private void ClickYes()
+        {
+            yesCallBack?.Invoke();
+        }
+        private void ClickNo()
+        {
+            noCallBack?.Invoke();
+        }
+
+
         public override void OnBtnClickEvent()
         {
-            AddBtnClickEvent(transform.Find("Button_Yes"), yesCallBack);
-            AddBtnClickEvent(transform.Find("Button_No"), noCallBack);
+            AddBtnClickEvent(transform.Find("Button_Yes"), ClickYes);
+            AddBtnClickEvent(transform.Find("Button_No"), ClickNo);
         }
 
         public override void RemoveEventListener()
         {
         }
 
-	}
+    }
 }

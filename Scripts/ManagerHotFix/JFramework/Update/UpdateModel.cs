@@ -18,6 +18,9 @@ namespace Assets.ManagerHotFix.JFramework.Update
     {
         public class VersionData
         {
+            public string apkPath;
+            public string apkMd5;
+            public long apkLength;
             public string version;
             public long length;
             public List<FileData> filedatas = new List<FileData>();
@@ -27,7 +30,7 @@ namespace Assets.ManagerHotFix.JFramework.Update
         {
             public string filename;
             public string md5;
-            public string length;
+            public long length;
         }
 
         public List<FileData> needHotUpdateList = new List<FileData>(); // 最终需要下载的文件
@@ -36,7 +39,9 @@ namespace Assets.ManagerHotFix.JFramework.Update
         public long currDownLength = 0;       //当前下载的文件长度
         public float downLoadTime = 0;        //下载的时间  
         public bool IsStartDown = false;      //是否开始下载  
+        public bool IsDownApk = false;       //是否下载APK 
         public long downLen = 0;
+        public long downTempLen = 0;        // 下载的temp文件长度
 
 
         public int copyFileLen  = 0;
@@ -45,15 +50,25 @@ namespace Assets.ManagerHotFix.JFramework.Update
         public long currCopyLength = 0;       //当前复制的文件长度
         public long copyLen = 0;
 
+
+        public VersionData serverVersionData; // 服务器版本信息
+        public VersionData localVersionData;  // 本地版本信息
         public string serverData;             // 服务器的更新数据 
         public string sAversionData;
 
         public override void Init()
         {
+
         }
 
         public override void ResetModel()
         {
+            needHotUpdateList.Clear();
+            currDownNum = 0;
+            currDownLength = 0;
+            currDownLength = 0;
+            downLoadTime = 0;
+            downTempLen = 0;
         }
 
         /// <summary>
@@ -161,19 +176,27 @@ namespace Assets.ManagerHotFix.JFramework.Update
         /// <returns></returns>
         public VersionData GetVersionJsonData(string jsonStr)
         {
-            JsonData jsonData = JsonMapper.ToObject(jsonStr);
-            VersionData versiondata = new VersionData();
-            versiondata.version = (string)jsonData["version"];
-            versiondata.length = long.Parse(jsonData["length"].ToString());
-            foreach (JsonData item in jsonData["files"])
-            {
-                FileData fileData = new FileData();
-                fileData.filename = (string)item["file"];
-                fileData.md5 = (string)item["md5"];
-                fileData.length = (string)item["length"];
-                versiondata.filedatas.Add(fileData);
-            }
-            return versiondata;
+
+            JsonMapper.RegisterImporter<int, long>((int value) => {
+                return (long)value;
+            });
+            JsonMapper.ToObject<VersionData>(jsonStr);
+            //JsonData jsonData = JsonMapper.ToObject(jsonStr);
+            //VersionData versiondata = new VersionData();
+            //versiondata.version = (string)jsonData["version"];
+            //versiondata.length = long.Parse(jsonData["length"].ToString());            
+            //versiondata.apkLength = long.Parse(jsonData["apkLength"].ToString());
+            //versiondata.apkMd5 = jsonData["apkMd5"].ToString();
+            //versiondata.apkPath = jsonData["apkPath"].ToString();
+            //foreach (JsonData item in jsonData["files"])
+            //{
+            //    FileData fileData = new FileData();
+            //    fileData.filename = (string)item["file"];
+            //    fileData.md5 = (string)item["md5"];
+            //    fileData.length = (string)item["length"].ToString();
+            //    versiondata.filedatas.Add(fileData);
+            //}
+            return JsonMapper.ToObject<VersionData>(jsonStr);
         }
 
 
@@ -195,6 +218,7 @@ namespace Assets.ManagerHotFix.JFramework.Update
         }
 
 
+
         /// <summary>
         /// 对比文件
         /// </summary>
@@ -212,6 +236,7 @@ namespace Assets.ManagerHotFix.JFramework.Update
             }
             return true;
         }
+
 
 
 

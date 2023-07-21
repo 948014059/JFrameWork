@@ -14,12 +14,31 @@ using UnityEngine;
 
 namespace Assets.Editor
 {
+    public class VersionData
+    {
+        public string apkPath;
+        public string apkMd5;
+        public long apkLength;
+        public string version;
+        public long length;
+        public List<FileData> filedatas = new List<FileData>();
+    }
+
+    public class FileData
+    {
+        public string filename;
+        public string md5;
+        public long length;
+    }
+
     public class AssetBundleTools : EditorWindow
     {
         private static AssetBundleTools AssetBundelToolsWin;
         public static string ProjectResourcesPath;
         public static string ABSavePath;
         public static string VersionName;
+        public static string ApkDir;
+        public static string ApkPath;
 
         public static string Version = "1.0.0";
 #if UNITY_STANDALONE_WIN
@@ -28,6 +47,7 @@ namespace Assets.Editor
         public static string PlatFrom = "Android";
 #endif
         public static bool IsGenHotFix = true;
+        public static bool IsBigUpdate = false;
         public bool IsCopyAB2StreamingAssets = false;
         public bool IsReBuild = false;
         public int TargetPlatformId = 0;
@@ -51,6 +71,8 @@ namespace Assets.Editor
             ProjectResourcesPath = Application.dataPath + "/ProjectResources/";
             ABSavePath = Application.dataPath.Replace("Assets", "ProjectResources/");
             VersionName = PlatFrom + "/VersionConfig.txt";
+            ApkDir   = Application.dataPath.Replace("Assets", "BuildApk/"); 
+            ApkPath  = ApkDir + Application.productName + ".apk";
         }
 
 
@@ -112,18 +134,50 @@ namespace Assets.Editor
             }
         }
 
+        private void BuildAPK()
+        {           
+            if (!Directory.Exists(ApkDir))
+            {
+                Directory.CreateDirectory(ApkDir);
+            }            
+            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+            PlayerSettings.bundleVersion = Version;
+            PlayerSettings.Android.bundleVersionCode = int.Parse(Version[0].ToString());
+            //EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
+            BuildOptions buildOption = BuildOptions.None;
+#if DEV
+            buildOption |= BuildOptions.Development;
+#else
+            buildOption &= BuildOptions.Development;
+#endif
+            BuildPipeline.BuildPlayer(EditorBuildSettings.scenes, ApkPath, BuildTarget.Android, buildOption);
+            Debug.Log("------------- 结束 BuildAPK -------------");
+            Debug.Log("Build目录：" + ApkPath);
+
+        }
+
         private void OnGUI()
         {
             ShowSwitchMacro();
             GUILayout.Label("请输入版本号：");
             Version = GUILayout.TextArea(Version);
+            IsBigUpdate = GUILayout.Toggle(IsBigUpdate, "是否打包apk(大版本更新/第一次打包需要勾选)");
+
             IsGenHotFix = GUILayout.Toggle(IsGenHotFix, "是否重新生成hotfix");
             IsReBuild = GUILayout.Toggle(IsReBuild, "是否重新生成AB包");
             IsCopyAB2StreamingAssets = GUILayout.Toggle(IsCopyAB2StreamingAssets, "是否将AB包复制到StreamingAssets(打完整包使用)");
 
             TargetPlatformId = GUILayout.Toolbar(TargetPlatformId, new[] { "Window", "Android", "Ios" });
-            if (GUILayout.Button("开始打AB包"))
+
+
+
+            if (GUILayout.Button("开始打包"))
             {
+                if (IsBigUpdate && TargetPlatformId == 1)
+                {
+                    BuildAPK();
+                }           
+
                 //Debug.Log(Version + "" + TargetPlatformId);
                 Build(buildTargets[TargetPlatformId], Version);
             }
@@ -175,7 +229,21 @@ namespace Assets.Editor
             SetAssetBundlesName(filePaths);
             BuildPipeline.BuildAssetBundles(savePath, BuildAssetBundleOptions.ChunkBasedCompression, target);
 
+            // 复制热更dll
             CreateHotfixDllAndCopy(target);
+            // 复制apk到AB包内
+            if (File.Exists(ApkPath))
+            {
+                string apkPath = ApkPath;
+                string newCopyPath = ApkPath.Replace(ApkDir, ABSavePath + PlatFrom + "/");
+                File.Copy(apkPath, newCopyPath, true);
+            }
+            else
+            {
+                Debug.LogError("BuildApk 路径下不存在apk，请勾选打包apk选项");
+                return;
+            }
+
             SetVersionJson(target);
 
             if (IsCopyAB2StreamingAssets)
@@ -207,9 +275,11 @@ namespace Assets.Editor
         private static void SetVersionJson(BuildTarget target)
         {
             string versionPath = ABSavePath + target.ToString() + VersionName.Replace(target.ToString(), "");
-            //Debug.Log(versionPath);
             if (File.Exists(versionPath)) File.Delete(versionPath);
-            JsonData versonJson = new JsonData();
+            
+            //JsonData versonJson = new JsonData();
+            VersionData versionData = new VersionData();
+
             string[] allFiles = Directory.GetFiles(ABSavePath + target.ToString(), "*.*", SearchOption.AllDirectories);
             md5Dict.Clear();
 
@@ -232,27 +302,42 @@ namespace Assets.Editor
                 {
                     string fileMd5 = GetMD5HashFromFile(item);
                     int fileLen = File.ReadAllBytes(item).Length;
-                    allLength += fileLen;
+                    if (extension != ".apk")
+                    {
+                        allLength += fileLen;
+                    }                   
                     md5Dict.Add(fileName, fileMd5 + "+" + fileLen);
                 }
 
+
+
             }
 
-            JsonData filesdata = new JsonData();
+            //JsonData filesdata = new JsonData();
+            List<FileData> filedatas = new List<FileData>();
             foreach (var Dictitem in md5Dict)
             {
-                JsonData jd = new JsonData();
-                jd["file"] = Dictitem.Key;
                 string[] nAndL = Dictitem.Value.Split('+');
-                jd["md5"] = nAndL[0];
-                jd["length"] = nAndL[1];
-                filesdata.Add(jd);
+
+                if (Dictitem.Key.Contains(".apk"))
+                {
+                    versionData.apkPath = Dictitem.Key;
+                    versionData.apkMd5 = nAndL[0];
+                    versionData.apkLength = long.Parse(nAndL[1]);
+                    continue;
+                }
+                FileData filedata = new FileData();
+                //JsonData jd = new JsonData();
+                filedata.filename = Dictitem.Key;
+                filedata.md5 = nAndL[0];
+                filedata.length = long.Parse(nAndL[1]);
+                filedatas.Add(filedata);
             }
 
-            versonJson["version"] = Version;
-            versonJson["length"] = allLength;
-            versonJson["files"] = filesdata;
-            File.WriteAllText(versionPath, versonJson.ToJson());
+            versionData.version = Version;
+            versionData.length = allLength;
+            versionData.filedatas = filedatas;
+            File.WriteAllText(versionPath, JsonMapper.ToJson(versionData));
             md5Dict.Clear();
 
 

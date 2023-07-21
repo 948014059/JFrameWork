@@ -22,6 +22,8 @@ namespace Assets.Scripts.AotScript
             "mscorlib.dll",
             "System.dll",
             "System.Core.dll",
+            "LitJson.dll",
+            "UnityEngine.AndroidJNIModule.dll"
         };
 
         private void Awake()
@@ -160,10 +162,10 @@ namespace Assets.Scripts.AotScript
         private IEnumerator DownLoadAssets(Action onDownloadComplete)
         {
             var assets = new List<string>
-        {
-            "ManagerHotFix.dll",
-            //"Assembly-CSharp.dll",
-        }.Concat(AOTMetaAssemblyNames);
+            {
+                "ManagerHotFix.dll",
+                //"Assembly-CSharp.dll",
+            }.Concat(AOTMetaAssemblyNames);
 
             foreach (var asset in assets)
             {
