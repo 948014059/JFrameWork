@@ -50,16 +50,19 @@ namespace Assets.Scripts.AotScript
             if (asset == "Assembly-CSharp.dll")
             {
                 var hotfixabPath = abPath + platFrom + "/Assembly-CSharp.dll.bytes";
+               // Debug.Log("hotfixabPath: "+ hotfixabPath);
                 if (File.Exists(hotfixabPath))
                 {
                     return "file://" + hotfixabPath;
                 }
+                return hotfixabPath;
+
             }
 
             if (asset == "ManagerHotFix.dll")
             {
                 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_WEBGL
                 return  Application.streamingAssetsPath+ "/ManagerHotFix.dll.bytes";
 #else
                 return BaseUtils.HotFixServerUrl + BaseUtils.ManagerHotFixFilePath;

@@ -21,7 +21,8 @@ namespace Assets.HotFix.UI.Start
 
         private void ShowTips()
         {
-            TipsManager.GetInstance().ShowTipsByID(1002);
+            Debug.Log("1111111111111111111111");
+            TipsManager.GetInstance().ShowTipsByID(1001);
             TipsConfig  tip = ConfigDataManager.GetInstance().GetConfigDataByType<TipsConfig>();
             //foreach (var item in tip.data)
             //{
@@ -45,6 +46,7 @@ namespace Assets.HotFix.UI.Start
         public override void OnBtnClickEvent()
         {
             AddBtnClickEvent(transform.Find("ShowTipBtn"), ShowTips);
+
         }
 
         public override void RemoveEventListener()

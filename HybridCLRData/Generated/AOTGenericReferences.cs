@@ -8,8 +8,8 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	//LitJson.ImporterFunc`2<System.Int32,System.Int64>
 	//System.Action`1<System.Object>
 	//System.Action`1<System.Int64>
-	//System.Action`2<System.Int64,System.Object>
 	//System.Action`2<System.Int32,System.Int32>
+	//System.Action`2<System.Int64,System.Object>
 	//System.Collections.Generic.Dictionary`2<System.Object,System.Object>
 	//System.Collections.Generic.Dictionary`2/Enumerator<System.Object,System.Object>
 	//System.Collections.Generic.IEnumerator`1<System.Object>
@@ -22,9 +22,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 
 	public void RefMethods()
 	{
-		LitJson.JsonMapper.RegisterImporter<int, long>((int value)=> {
-			return (long)value;
-		});
 		// System.Void LitJson.JsonMapper::RegisterImporter<System.Int32,System.Int64>(LitJson.ImporterFunc`2<System.Int32,System.Int64>)
 		// System.Object LitJson.JsonMapper::ToObject<System.Object>(System.String)
 		// System.Object System.Activator::CreateInstance<System.Object>()

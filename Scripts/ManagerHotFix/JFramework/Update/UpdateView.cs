@@ -20,6 +20,8 @@ namespace Assets.ManagerHotFix.JFramework.Update
         private UpdateModel updateModel;
         private Transform UpdatePrompt;
 
+        private ABManager aBManager;
+
         public override void ShowView(object obj)
         {
             updateModel = ModelManager.GetInstance().GetModelInstence<UpdateModel>();
@@ -34,7 +36,8 @@ namespace Assets.ManagerHotFix.JFramework.Update
 
         private void Start()
         {
-            CheckLocalVersionUpdate();
+            // CheckLocalVersionUpdate();
+            LoadABWithWebGL();
         }
 
         private void Update()
@@ -97,6 +100,35 @@ namespace Assets.ManagerHotFix.JFramework.Update
             }
         }
 
+
+
+        private void LoadABWithWebGL()
+        {
+            aBManager = ABManager.GetInstance();
+            StartCoroutine(aBManager.WebGLLoadMainAB(LoadAllBundles));
+        }
+
+        private void LoadAllBundles()
+        {
+            SetUpdateText("资源加载中...");
+            StartCoroutine(aBManager.LoadAllABAssets((num,len)=> {
+                updataSlider.value = num / len;
+
+            },
+            ()=> {
+                //LoadHotFix();
+                StartCoroutine(GameLoader.Instance.DownloadHotFixAssets("Assembly-CSharp.dll", () =>
+                {
+                    /// 补充元数据
+                    GameLoader.Instance.LoadMetadataForAOTAssemblies();
+#if !UNITY_EDITOR
+        System.Reflection.Assembly.Load(GameLoader.Instance.GetAssetData("Assembly-CSharp.dll"));
+#endif
+                    StartG();
+
+                }, Config.UpdateUrl, Config.PlatFrom));
+            }));
+        }
 
         /// <summary>
         /// 准备资源(第一次启动，可读写路径没有资源，
@@ -270,10 +302,6 @@ namespace Assets.ManagerHotFix.JFramework.Update
         }
 
 
-
-
-
-
         /// <summary>
         /// 检测大版本更新
         /// </summary>
@@ -371,9 +399,6 @@ namespace Assets.ManagerHotFix.JFramework.Update
 
             moduleManagerOpenModule.Invoke(instance, null); // 使用方法。
         }
-
-
-
 
 
     }

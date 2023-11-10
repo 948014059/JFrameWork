@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.U2D;
 
 namespace Assets.ManagerHotFix.JFramework.Manager
@@ -37,13 +38,21 @@ namespace Assets.ManagerHotFix.JFramework.Manager
             DestoryAllAB();
         }
 
+
+
         /// <summary>
         /// 初始化AB包
         /// </summary>
         public void InitData()
         {
-            LoadMainABWithManifest();
+#if !UNITY_WEBGL
+         LoadMainABWithManifest();
+#endif
+
         }
+
+
+       
 
         /// <summary>
         /// 卸载所有Ab包
@@ -350,12 +359,62 @@ namespace Assets.ManagerHotFix.JFramework.Manager
             }
         }
 
+
+        public IEnumerator WebGLLoadMainAB(Action successCallBack)
+        {
+            string platFrom = Config.PlatFrom;
+
+            //AbMain = AssetBundle.LoadFromFile(ABFilePath + platFrom);
+            //ABManifest = AbMain.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
+            UnityWebRequest request =  UnityWebRequestAssetBundle.GetAssetBundle(ABFilePath + platFrom);
+            yield return request.SendWebRequest();
+            if (request.isDone)
+            {
+                if (request.result == UnityWebRequest.Result.ProtocolError)
+                {
+                    Debug.Log("load assetbundle error! Path:" + ABFilePath + platFrom);
+                }
+                AbMain  = (request.downloadHandler as DownloadHandlerAssetBundle).assetBundle;//转为AB包
+                ABManifest = AbMain.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
+                successCallBack?.Invoke();
+            }
+        }
+
+
+        public IEnumerator LoadAllABAssets(Action<int,int> procallBack,Action successCallBack)
+        {
+            string[] allBundles =  ABManifest.GetAllAssetBundles();
+            UnityWebRequest request;
+            for (int i = 0; i < allBundles.Length; i++)
+            {
+                string name = allBundles[i];
+                request = UnityWebRequestAssetBundle.GetAssetBundle(ABFilePath + name);
+                yield return request.SendWebRequest();
+                if (request.isDone)
+                {
+                    if (request.result == UnityWebRequest.Result.ProtocolError)
+                    {
+                        Debug.Log("load assetbundle error! Path:" + ABFilePath + name);
+                    }
+                    ABDict[name] = (request.downloadHandler as DownloadHandlerAssetBundle).assetBundle;//转为AB包
+                    Debug.Log("load"+ name);
+                    procallBack?.Invoke(i, allBundles.Length);
+                }
+            }
+            successCallBack?.Invoke();
+            //yield return null;
+        }
+
         /// <summary>
         /// 获取要加载的目录  
         /// </summary>
         /// <returns></returns>
         public  string GetAssetsPath()
         {
+
+#if UNITY_WEBGL
+            return Config.UpdateUrl+ Config.PlatFrom + "/";
+#endif
 
             string assetsPath = "";
             assetsPath = Config.ABPath + Config.PlatFrom + "/";

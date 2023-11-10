@@ -136,10 +136,15 @@
     <type fullname="UnityEngine.UI.Slider" preserve="all" />
     <type fullname="UnityEngine.UI.Text" preserve="all" />
   </assembly>
+  <assembly fullname="UnityEngine.UnityWebRequestAssetBundleModule">
+    <type fullname="UnityEngine.Networking.DownloadHandlerAssetBundle" preserve="all" />
+    <type fullname="UnityEngine.Networking.UnityWebRequestAssetBundle" preserve="all" />
+  </assembly>
   <assembly fullname="UnityEngine.UnityWebRequestModule">
     <type fullname="UnityEngine.Networking.DownloadHandler" preserve="all" />
     <type fullname="UnityEngine.Networking.DownloadHandlerBuffer" preserve="all" />
     <type fullname="UnityEngine.Networking.UnityWebRequest" preserve="all" />
+    <type fullname="UnityEngine.Networking.UnityWebRequest/Result" preserve="all" />
     <type fullname="UnityEngine.Networking.UnityWebRequestAsyncOperation" preserve="all" />
     <type fullname="UnityEngine.Networking.UploadHandler" preserve="all" />
     <type fullname="UnityEngine.Networking.UploadHandlerRaw" preserve="all" />

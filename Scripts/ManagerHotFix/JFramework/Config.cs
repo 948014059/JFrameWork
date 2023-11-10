@@ -23,9 +23,11 @@ namespace Assets.ManagerHotFix.JFramework
         /// 当前的设备
         /// </summary>
 #if UNITY_STANDALONE_WIN
-    public static string PlatFrom = "StandaloneWindows64";
+        public static string PlatFrom = "StandaloneWindows64";
 #elif UNITY_ANDROID
         public static string PlatFrom = "Android";
+#elif UNITY_WEBGL
+        public static string PlatFrom = "WebGL";
 #endif
 
 
@@ -45,7 +47,7 @@ namespace Assets.ManagerHotFix.JFramework
         /// <summary>
         /// 热更服务器地址
         /// </summary>
-        public static string UpdateUrl = "http://192.168.2.221:88/ProjectResources/";
+        public static string UpdateUrl = "http://192.168.3.191:88/ProjectResources/";
         public static string VersionName = PlatFrom + "/VersionConfig.txt";
         public static string VersionTempName = PlatFrom + "/VersionTempConfig.txt";
         public static string CopyResourceTempName = PlatFrom + "/CopyResourceTempConfig.txt";

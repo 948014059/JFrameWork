@@ -41,10 +41,13 @@ namespace Assets.Editor
         public static string ApkPath;
 
         public static string Version = "1.0.0";
+
 #if UNITY_STANDALONE_WIN
         public static string PlatFrom = "StandaloneWindows64";
 #elif UNITY_ANDROID
         public static string PlatFrom = "Android";
+#elif UNITY_WEBGL
+        public static string PlatFrom = "WebGL";
 #endif
         public static bool IsGenHotFix = true;
         public static bool IsBigUpdate = false;
@@ -57,13 +60,14 @@ namespace Assets.Editor
             BuildTarget.StandaloneWindows64,
             BuildTarget.Android,
             BuildTarget.iOS,
+            BuildTarget.WebGL,
         };
 
 
         private void Awake()
         {
             Reset();
-
+            TargetPlatformId = buildTargets.ToList().IndexOf(EditorUserBuildSettings.activeBuildTarget);
         }
 
         void Reset()
@@ -137,6 +141,7 @@ namespace Assets.Editor
                 { "DEV" , false} };
                 ChangeDefineSymbols(ABMacro);
             }
+            GUILayout.Space(20);
         }
 
         private void BuildAPK()
@@ -172,7 +177,7 @@ namespace Assets.Editor
             IsReBuild = GUILayout.Toggle(IsReBuild, "是否重新生成AB包");
             IsCopyAB2StreamingAssets = GUILayout.Toggle(IsCopyAB2StreamingAssets, "是否将AB包复制到StreamingAssets(打完整包使用)");
 
-            TargetPlatformId = GUILayout.Toolbar(TargetPlatformId, new[] { "Window", "Android", "Ios" });
+            TargetPlatformId = GUILayout.Toolbar(TargetPlatformId, new[] { "Window", "Android", "Ios" ,"WebGL" });
 
 
 
@@ -265,6 +270,7 @@ namespace Assets.Editor
             {
                 Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
             }
+
             foreach (string newPath in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories))
             {
                 File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
@@ -378,8 +384,6 @@ namespace Assets.Editor
                     return sb.ToString();
                 }
                 return null;
-
-
             }
             catch (Exception e)
             {
